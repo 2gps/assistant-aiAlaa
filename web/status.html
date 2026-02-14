@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3laa's Assistant - حالة البوت</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 30px;
+            background: #10b981;
+            color: white;
+            border-radius: 50px;
+            font-weight: bold;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            font-size: 1.5em;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .logs-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 10px;
+            margin: 5px 0;
+            border-right: 3px solid #667eea;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .log-error {
+            border-right-color: #ef4444;
+        }
+
+        .log-warn {
+            border-right-color: #f59e0b;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .refresh-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1em;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .capabilities {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .capability-tag {
+            display: inline-block;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 3laa's Assistant</h1>
+            <p class="subtitle">أقوى بوت AI في تيليجرام</p>
+            <div class="status-badge" id="statusBadge">● متصل ويعمل</div>
+            <p>المطور: علاء الدين (Alaa Aldeen)</p>
+        </div>
+
+        <div class="capabilities">
+            <h2 style="color: #667eea; margin-bottom: 15px;">✨ القدرات</h2>
+            <span class="capability-tag">🖼️ تحليل الصور</span>
+            <span class="capability-tag">📄 قراءة الملفات</span>
+            <span class="capability-tag">💻 كتابة الأكواد</span>
+            <span class="capability-tag">🔍 بحث عميق</span>
+            <span class="capability-tag">🎨 إنشاء صور</span>
+            <span class="capability-tag">🎓 حل الامتحانات</span>
+            <span class="capability-tag">🧠 AI متعدد النماذج</span>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-title">
+                    <span class="card-icon">📊</span>
+                    إحصائيات عامة
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">إجمالي المستخدمين</span>
+                    <span class="stat-value" id="totalUsers">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">إجمالي الرسائل</span>
+                    <span class="stat-value" id="totalMessages">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">وقت التشغيل</span>
+                    <span class="stat-value" id="uptime">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">الإصدار</span>
+                    <span class="stat-value" id="version">4.0 Ultimate Pro</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="card-icon">🎯</span>
+                    الأداء
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">الصور المحللة</span>
+                    <span class="stat-value" id="imagesAnalyzed">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">الملفات المعالجة</span>
+                    <span class="stat-value" id="documentsProcessed">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">الأكواد المكتوبة</span>
+                    <span class="stat-value" id="codesGenerated">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">الأبحاث المنجزة</span>
+                    <span class="stat-value" id="researchesDone">-</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <span class="card-icon">🧠</span>
+                    نماذج AI
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">النموذج الأساسي</span>
+                    <span class="stat-value">Llama 3.3 70B</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">نموذج الصور</span>
+                    <span class="stat-value">Llama Vision 3.2</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">النماذج المتاحة</span>
+                    <span class="stat-value">6 نماذج</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">اختيار ذكي</span>
+                    <span class="stat-value">✅ مفعّل</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="refreshData()">🔄 تحديث البيانات</button>
+
+        <div class="logs-container">
+            <h2 style="color: #667eea; margin-bottom: 15px;">📝 آخر الأحداث</h2>
+            <div id="logsContainer">
+                <div class="log-entry">جاري تحميل السجلات...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>صُنع بـ ❤️ بواسطة علاء الدين</p>
+            <p>Powered by Groq AI • Node.js • Telegram Bot API</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                // تحديث الإحصائيات
+                document.getElementById('totalUsers').textContent = data.totalUsers || 0;
+                document.getElementById('totalMessages').textContent = data.totalMessages || 0;
+                document.getElementById('uptime').textContent = data.uptime || '0 دقيقة';
+                document.getElementById('imagesAnalyzed').textContent = data.imagesAnalyzed || 0;
+                document.getElementById('documentsProcessed').textContent = data.documentsProcessed || 0;
+                document.getElementById('codesGenerated').textContent = data.codesGenerated || 0;
+                document.getElementById('researchesDone').textContent = data.researchesDone || 0;
+                
+                // تحديث حالة الاتصال
+                document.getElementById('statusBadge').textContent = data.status === 'online' ? '● متصل ويعمل' : '○ غير متصل';
+                document.getElementById('statusBadge').style.background = data.status === 'online' ? '#10b981' : '#ef4444';
+                
+                // تحديث السجلات
+                if (data.recentLogs && data.recentLogs.length > 0) {
+                    const logsHTML = data.recentLogs.map(log => {
+                        const logClass = log.level === 'error' ? 'log-error' : log.level === 'warn' ? 'log-warn' : '';
+                        const time = new Date(log.timestamp).toLocaleTimeString('ar-EG');
+                        return `<div class="log-entry ${logClass}">[${time}] ${log.message}</div>`;
+                    }).reverse().join('');
+                    document.getElementById('logsContainer').innerHTML = logsHTML;
+                }
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('statusBadge').textContent = '○ خطأ في الاتصال';
+                document.getElementById('statusBadge').style.background = '#ef4444';
+            }
+        }
+
+        function refreshData() {
+            loadData();
+        }
+
+        // تحميل البيانات عند فتح الصفحة
+        loadData();
+        
+        // تحديث تلقائي كل 10 ثواني
+        setInterval(loadData, 10000);
+    </script>
+</body>
+</html>
