@@ -1,16 +1,16 @@
 {
-  "name": "telegram-chatgpt-bot",
+  "name": "telegram-gemini-bot",
   "version": "1.0.0",
-  "description": "Telegram bot powered by ChatGPT API with conversation history",
+  "description": "Telegram bot powered by Google Gemini AI with conversation history",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
-  "keywords": ["telegram", "bot", "chatgpt", "openai"],
+  "keywords": ["telegram", "bot", "gemini", "google", "ai"],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
-    "openai": "^4.20.1"
+    "@google/generative-ai": "^0.1.3"
   }
 }
