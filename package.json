@@ -1,17 +1,18 @@
 {
-  "name": "telegram-groq-bot-ultimate",
-  "version": "3.0.0",
-  "description": "Ultimate Telegram bot with AI vision, image generation, deep research, and code execution",
-  "main": "bot.js",
+  "name": "3laas-assistant-legendary",
+  "version": "5.0.0",
+  "description": "البوت الأسطوري - مستوى خيالي لا يُصدق",
+  "main": "bot-legendary-practical.js",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "node bot.js",
-    "dev": "node bot.js"
+    "start": "node bot-legendary-practical.js",
+    "dev": "nodemon bot-legendary-practical.js",
+    "install-ytdlp": "pip3 install --break-system-packages yt-dlp || pip install yt-dlp"
   },
-  "keywords": ["telegram", "bot", "groq", "llama", "ai", "vision", "image-generation"],
-  "author": "Alaa Aldeen",
+  "keywords": ["telegram", "bot", "groq", "ai", "legendary", "ultimate", "godmode"],
+  "author": "Alaa Aldeen (علاء الدين) - The Legend",
   "license": "MIT",
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
@@ -23,6 +24,11 @@
     "xlsx": "^0.18.5",
     "sharp": "^0.33.0",
     "form-data": "^4.0.0",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "node-html-parser": "^6.1.11",
+    "puppeteer-core": "^21.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }
