@@ -1,13 +1,14 @@
 const TelegramBot = require('node-telegram-bot-api');
-const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // ضع التوكنات هنا
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN';
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'YOUR_OPENAI_API_KEY';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY';
 
 // إنشاء البوت
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 // تخزين محادثات المستخدمين في الذاكرة
 const userConversations = {};
@@ -18,12 +19,7 @@ const MAX_HISTORY = 20;
 // دالة للحصول على أو إنشاء محادثة المستخدم
 function getUserConversation(userId) {
   if (!userConversations[userId]) {
-    userConversations[userId] = [
-      {
-        role: 'system',
-        content: 'أنت مساعد ذكي ومفيد. تجيب على الأسئلة باللغة العربية أو الإنجليزية حسب لغة السؤال.'
-      }
-    ];
+    userConversations[userId] = [];
   }
   return userConversations[userId];
 }
@@ -31,25 +27,17 @@ function getUserConversation(userId) {
 // دالة لإضافة رسالة للمحادثة
 function addMessage(userId, role, content) {
   const conversation = getUserConversation(userId);
-  conversation.push({ role, content });
+  conversation.push({ role, parts: [{ text: content }] });
   
-  // حفظ آخر MAX_HISTORY رسالة فقط (مع الاحتفاظ بالـ system message)
-  if (conversation.length > MAX_HISTORY + 1) {
-    userConversations[userId] = [
-      conversation[0], // system message
-      ...conversation.slice(-(MAX_HISTORY))
-    ];
+  // حفظ آخر MAX_HISTORY رسالة فقط
+  if (conversation.length > MAX_HISTORY) {
+    userConversations[userId] = conversation.slice(-MAX_HISTORY);
   }
 }
 
 // دالة لمسح محادثة المستخدم
 function clearConversation(userId) {
-  userConversations[userId] = [
-    {
-      role: 'system',
-      content: 'أنت مساعد ذكي ومفيد. تجيب على الأسئلة باللغة العربية أو الإنجليزية حسب لغة السؤال.'
-    }
-  ];
+  userConversations[userId] = [];
 }
 
 // أمر /start
@@ -59,7 +47,7 @@ bot.onText(/\/start/, (msg) => {
   
   bot.sendMessage(chatId, 
     `🤖 مرحباً ${username}!\n\n` +
-    `أنا بوت ذكي يستخدم ChatGPT للإجابة على أسئلتك.\n\n` +
+    `أنا بوت ذكي يستخدم Google Gemini AI للإجابة على أسئلتك.\n\n` +
     `📝 **الأوامر المتاحة:**\n` +
     `/start - عرض هذه الرسالة\n` +
     `/help - عرض المساعدة\n` +
@@ -109,14 +97,14 @@ bot.onText(/\/stats/, (msg) => {
   const userId = msg.from.id;
   
   const conversation = getUserConversation(userId);
-  const messageCount = Math.floor((conversation.length - 1) / 2); // عدد تبادل الرسائل
+  const messageCount = Math.floor(conversation.length / 2); // عدد تبادل الرسائل
   const totalUsers = Object.keys(userConversations).length;
   
   bot.sendMessage(chatId,
     `📊 **إحصائيات المحادثة:**\n\n` +
     `💬 عدد رسائلك: ${messageCount}\n` +
     `👥 إجمالي المستخدمين: ${totalUsers}\n` +
-    `📝 الرسائل المحفوظة: ${conversation.length - 1} رسالة\n` +
+    `📝 الرسائل المحفوظة: ${conversation.length} رسالة\n` +
     `🔄 الحد الأقصى: ${MAX_HISTORY} رسالة`,
     { parse_mode: 'Markdown' }
   );
@@ -145,18 +133,23 @@ bot.on('message', async (msg) => {
     // إضافة رسالة المستخدم للتاريخ
     addMessage(userId, 'user', userMessage);
     
-    // الحصول على الرد من ChatGPT
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: getUserConversation(userId),
-      max_tokens: 1000,
-      temperature: 0.7,
+    // تحويل المحادثة لصيغة Gemini
+    const conversation = getUserConversation(userId);
+    const chat = model.startChat({
+      history: conversation.slice(0, -1), // كل المحادثة ما عدا آخر رسالة
+      generationConfig: {
+        maxOutputTokens: 1000,
+        temperature: 0.7,
+      },
     });
     
-    const assistantMessage = completion.choices[0].message.content;
+    // الحصول على الرد من Gemini
+    const result = await chat.sendMessage(userMessage);
+    const response = await result.response;
+    const assistantMessage = response.text();
     
     // إضافة رد المساعد للتاريخ
-    addMessage(userId, 'assistant', assistantMessage);
+    addMessage(userId, 'model', assistantMessage);
     
     // إرسال الرد للمستخدم
     await bot.sendMessage(chatId, assistantMessage);
@@ -166,12 +159,12 @@ bot.on('message', async (msg) => {
     
     let errorMessage = '❌ عذراً، حدث خطأ في معالجة طلبك.';
     
-    if (error.code === 'insufficient_quota') {
-      errorMessage = '⚠️ انتهت رصيد API الخاص بـ OpenAI. يرجى التحقق من حسابك.';
+    if (error.message && error.message.includes('API key')) {
+      errorMessage = '🔑 خطأ في مفتاح API. تحقق من صحة المفتاح.';
+    } else if (error.message && error.message.includes('quota')) {
+      errorMessage = '⏳ تم تجاوز الحد المسموح من الطلبات. حاول مرة أخرى بعد قليل.';
     } else if (error.status === 429) {
       errorMessage = '⏳ تم تجاوز الحد المسموح من الطلبات. حاول مرة أخرى بعد قليل.';
-    } else if (error.status === 401) {
-      errorMessage = '🔑 خطأ في مفتاح API. تحقق من صحة المفتاح.';
     }
     
     await bot.sendMessage(chatId, errorMessage);
