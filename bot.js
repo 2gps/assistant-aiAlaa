@@ -179,7 +179,6 @@ bot.on('message', async (msg) => {
     
     await bot.sendMessage(chatId, errorMessage);
   }
-  }
 });
 
 // معالجة الأخطاء
