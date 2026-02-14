@@ -59,11 +59,12 @@ const botData = {
 // ===== 🧠 نظام AI الذكي =====
 
 const MODELS = {
-  FAST: 'gemma2-9b-it',
-  BALANCED: 'llama-3.1-70b-versatile',
+  FAST: 'llama-3.3-70b-versatile',
+  BALANCED: 'llama-3.3-70b-versatile',
   POWER: 'llama-3.3-70b-versatile',
   VISION: 'llama-3.2-11b-vision-preview'
 };
+
 
 function selectModel(message) {
   const lower = message.toLowerCase();
