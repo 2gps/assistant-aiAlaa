@@ -1,0 +1,16 @@
+{
+  "name": "telegram-chatgpt-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot powered by ChatGPT API with conversation history",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "keywords": ["telegram", "bot", "chatgpt", "openai"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.64.0",
+    "openai": "^4.20.1"
+  }
+}
