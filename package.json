@@ -1,16 +1,23 @@
 {
-  "name": "telegram-groq-bot",
-  "version": "1.0.0",
-  "description": "Telegram bot powered by Groq AI (fastest AI in the world!) with conversation history",
+  "name": "telegram-groq-bot-ultimate",
+  "version": "3.0.0",
+  "description": "Ultimate Telegram bot with AI vision, image generation, deep research, and code execution",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
-  "keywords": ["telegram", "bot", "groq", "llama", "ai"],
+  "keywords": ["telegram", "bot", "groq", "llama", "ai", "vision", "image-generation"],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
-    "groq-sdk": "^0.8.0"
+    "groq-sdk": "^0.8.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.6.0",
+    "xlsx": "^0.18.5",
+    "sharp": "^0.33.0",
+    "form-data": "^4.0.0"
   }
 }
