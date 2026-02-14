@@ -1,14 +1,13 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
 // ضع التوكنات هنا
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || 'YOUR_TELEGRAM_BOT_TOKEN';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || 'YOUR_GROQ_API_KEY';
 
 // إنشاء البوت
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // النموذج الحديث والمجاني
+const groq = new Groq({ apiKey: GROQ_API_KEY });
 
 // تخزين محادثات المستخدمين في الذاكرة
 const userConversations = {};
@@ -19,7 +18,12 @@ const MAX_HISTORY = 20;
 // دالة للحصول على أو إنشاء محادثة المستخدم
 function getUserConversation(userId) {
   if (!userConversations[userId]) {
-    userConversations[userId] = [];
+    userConversations[userId] = [
+      {
+        role: 'system',
+        content: 'أنت مساعد ذكي ومفيد. تجيب على الأسئلة باللغة العربية أو الإنجليزية حسب لغة السؤال.'
+      }
+    ];
   }
   return userConversations[userId];
 }
@@ -27,17 +31,25 @@ function getUserConversation(userId) {
 // دالة لإضافة رسالة للمحادثة
 function addMessage(userId, role, content) {
   const conversation = getUserConversation(userId);
-  conversation.push({ role, parts: [{ text: content }] });
+  conversation.push({ role, content });
   
-  // حفظ آخر MAX_HISTORY رسالة فقط
-  if (conversation.length > MAX_HISTORY) {
-    userConversations[userId] = conversation.slice(-MAX_HISTORY);
+  // حفظ آخر MAX_HISTORY رسالة فقط (مع الاحتفاظ بالـ system message)
+  if (conversation.length > MAX_HISTORY + 1) {
+    userConversations[userId] = [
+      conversation[0], // system message
+      ...conversation.slice(-(MAX_HISTORY))
+    ];
   }
 }
 
 // دالة لمسح محادثة المستخدم
 function clearConversation(userId) {
-  userConversations[userId] = [];
+  userConversations[userId] = [
+    {
+      role: 'system',
+      content: 'أنت مساعد ذكي ومفيد. تجيب على الأسئلة باللغة العربية أو الإنجليزية حسب لغة السؤال.'
+    }
+  ];
 }
 
 // أمر /start
@@ -47,13 +59,13 @@ bot.onText(/\/start/, (msg) => {
   
   bot.sendMessage(chatId, 
     `🤖 مرحباً ${username}!\n\n` +
-    `أنا بوت ذكي يستخدم Google Gemini AI للإجابة على أسئلتك.\n\n` +
+    `أنا بوت ذكي يستخدم Groq AI (أسرع من ChatGPT بـ 10x!) للإجابة على أسئلتك.\n\n` +
     `📝 **الأوامر المتاحة:**\n` +
     `/start - عرض هذه الرسالة\n` +
     `/help - عرض المساعدة\n` +
     `/clear - مسح المحادثة والبدء من جديد\n` +
     `/stats - عرض إحصائيات المحادثة\n\n` +
-    `✨ فقط أرسل لي أي سؤال وسأجيبك!`,
+    `✨ فقط أرسل لي أي سؤال وسأجيبك بسرعة فائقة!`,
     { parse_mode: 'Markdown' }
   );
 });
@@ -97,15 +109,16 @@ bot.onText(/\/stats/, (msg) => {
   const userId = msg.from.id;
   
   const conversation = getUserConversation(userId);
-  const messageCount = Math.floor(conversation.length / 2); // عدد تبادل الرسائل
+  const messageCount = Math.floor((conversation.length - 1) / 2); // عدد تبادل الرسائل
   const totalUsers = Object.keys(userConversations).length;
   
   bot.sendMessage(chatId,
     `📊 **إحصائيات المحادثة:**\n\n` +
     `💬 عدد رسائلك: ${messageCount}\n` +
     `👥 إجمالي المستخدمين: ${totalUsers}\n` +
-    `📝 الرسائل المحفوظة: ${conversation.length} رسالة\n` +
-    `🔄 الحد الأقصى: ${MAX_HISTORY} رسالة`,
+    `📝 الرسائل المحفوظة: ${conversation.length - 1} رسالة\n` +
+    `🔄 الحد الأقصى: ${MAX_HISTORY} رسالة\n` +
+    `⚡ النموذج: Llama 3.3 (سريع جداً!)`,
     { parse_mode: 'Markdown' }
   );
 });
@@ -133,41 +146,39 @@ bot.on('message', async (msg) => {
     // إضافة رسالة المستخدم للتاريخ
     addMessage(userId, 'user', userMessage);
     
-    // تحويل المحادثة لصيغة Gemini
-    const conversation = getUserConversation(userId);
-    const chat = model.startChat({
-      history: conversation.slice(0, -1), // كل المحادثة ما عدا آخر رسالة
-      generationConfig: {
-        maxOutputTokens: 1000,
-        temperature: 0.7,
-      },
+    // الحصول على الرد من Groq
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile', // أسرع وأقوى نموذج مجاني
+      messages: getUserConversation(userId),
+      max_tokens: 1000,
+      temperature: 0.7,
     });
     
-    // الحصول على الرد من Gemini
-    const result = await chat.sendMessage(userMessage);
-    const response = await result.response;
-    const assistantMessage = response.text();
+    const assistantMessage = completion.choices[0].message.content;
     
     // إضافة رد المساعد للتاريخ
-    addMessage(userId, 'model', assistantMessage);
+    addMessage(userId, 'assistant', assistantMessage);
     
     // إرسال الرد للمستخدم
     await bot.sendMessage(chatId, assistantMessage);
     
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Full Error:', error);
     
     let errorMessage = '❌ عذراً، حدث خطأ في معالجة طلبك.';
     
-    if (error.message && error.message.includes('API key')) {
-      errorMessage = '🔑 خطأ في مفتاح API. تحقق من صحة المفتاح.';
-    } else if (error.message && error.message.includes('quota')) {
-      errorMessage = '⏳ تم تجاوز الحد المسموح من الطلبات. حاول مرة أخرى بعد قليل.';
+    if (error.message && error.message.includes('API_KEY')) {
+      errorMessage = '🔑 خطأ في مفتاح API. تحقق من GROQ_API_KEY في Secrets.';
+    } else if (error.message && error.message.includes('rate_limit')) {
+      errorMessage = '⏳ تم تجاوز الحد المسموح. حاول بعد دقيقة.';
+    } else if (error.status === 401) {
+      errorMessage = '🔑 مفتاح API غير صحيح. تحقق من GROQ_API_KEY.';
     } else if (error.status === 429) {
-      errorMessage = '⏳ تم تجاوز الحد المسموح من الطلبات. حاول مرة أخرى بعد قليل.';
+      errorMessage = '⏳ تجاوزت الحد اليومي (14,400 طلب). حاول غداً.';
     }
     
     await bot.sendMessage(chatId, errorMessage);
+  }
   }
 });
 
