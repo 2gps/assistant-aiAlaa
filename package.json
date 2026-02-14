@@ -1,16 +1,16 @@
 {
-  "name": "telegram-gemini-bot",
+  "name": "telegram-groq-bot",
   "version": "1.0.0",
-  "description": "Telegram bot powered by Google Gemini AI with conversation history",
+  "description": "Telegram bot powered by Groq AI (fastest AI in the world!) with conversation history",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
-  "keywords": ["telegram", "bot", "gemini", "google", "ai"],
+  "keywords": ["telegram", "bot", "groq", "llama", "ai"],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "node-telegram-bot-api": "^0.64.0",
-    "@google/generative-ai": "^0.1.3"
+    "groq-sdk": "^0.8.0"
   }
 }
