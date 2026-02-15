@@ -59,33 +59,16 @@ const botData = {
 // ===== 🧠 نظام AI الذكي =====
 
 const MODELS = {
-  FAST: 'llama-3.3-70b-versatile',
-  BALANCED: 'llama-3.3-70b-versatile',
-  POWER: 'llama-3.3-70b-versatile',
+  MAIN: 'llama-3.3-70b-versatile',
   VISION: 'llama-3.2-11b-vision-preview'
 };
 
 
 function selectModel(message) {
-  const lower = message.toLowerCase();
-  
-  // كود برمجي
-  if (lower.includes('كود') || lower.includes('code') || lower.includes('برمج')) {
-    return MODELS.POWER;
-  }
-  
-  // سؤال معقد
-  if (lower.includes('اشرح') || lower.includes('حلل') || lower.includes('explain')) {
-    return MODELS.POWER;
-  }
-  
-  // سؤال بسيط
-  if (message.length < 50 && (lower.includes('ما') || lower.includes('what'))) {
-    return MODELS.FAST;
-  }
-  
-  return MODELS.BALANCED;
+  // نموذج واحد قوي لكل شي
+  return MODELS.MAIN;
 }
+
 
 async function getAIResponse(messages, userId) {
   try {
@@ -424,7 +407,7 @@ bot.onText(/\/code (.+)/, async (msg, match) => {
   
   try {
     const response = await groq.chat.completions.create({
-      model: MODELS.POWER,
+      model: MODELS.MAIN,
       messages: [
         {
           role: 'system',
