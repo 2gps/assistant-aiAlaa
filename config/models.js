@@ -2,42 +2,20 @@
 const { DIFFICULTY } = require('./constants');
 
 const MODELS = {
-  // نماذج Groq (سريعة ومجانية)
+  // نماذج Groq (سريعة ومجانية) - محدثة 2024
   GROQ: {
-    // للأسئلة البسيطة - سريع جداً
-    FAST: {
-      name: 'gemma2-9b-it',
-      provider: 'groq',
-      speed: 'very_fast',
-      quality: 'good',
-      difficulty: [DIFFICULTY.SIMPLE],
-      tokens: 8000,
-      description: 'للأسئلة البسيطة والسريعة'
-    },
-    
-    // للأسئلة المتوسطة - متوازن
-    BALANCED: {
-      name: 'llama-3.1-70b-versatile',
-      provider: 'groq',
-      speed: 'fast',
-      quality: 'excellent',
-      difficulty: [DIFFICULTY.SIMPLE, DIFFICULTY.MODERATE],
-      tokens: 8000,
-      description: 'متوازن بين السرعة والجودة'
-    },
-    
-    // للأسئلة المعقدة - الأقوى
-    POWER: {
+    // النموذج الرئيسي - الأقوى والأحدث
+    MAIN: {
       name: 'llama-3.3-70b-versatile',
       provider: 'groq',
-      speed: 'fast',
+      speed: 'very_fast',
       quality: 'superior',
-      difficulty: [DIFFICULTY.MODERATE, DIFFICULTY.COMPLEX, DIFFICULTY.EXPERT],
+      difficulty: 'all',
       tokens: 8000,
-      description: 'الأقوى - للمسائل المعقدة'
+      description: 'النموذج الرئيسي - الأقوى والأسرع'
     },
     
-    // لتحليل الصور
+    // للصور فقط
     VISION: {
       name: 'llama-3.2-11b-vision-preview',
       provider: 'groq',
@@ -48,82 +26,30 @@ const MODELS = {
       description: 'تحليل الصور والرؤية'
     },
     
-    // للأكواد
-    CODE: {
+    // نموذج سريع جداً
+    FAST: {
       name: 'llama-3.3-70b-versatile',
       provider: 'groq',
-      speed: 'fast',
+      speed: 'very_fast',
       quality: 'superior',
       difficulty: 'all',
       tokens: 8000,
-      description: 'متخصص في البرمجة'
-    },
-    
-    // للبحث والتحليل
-    RESEARCH: {
-      name: 'llama-3.1-70b-versatile',
-      provider: 'groq',
-      speed: 'fast',
-      quality: 'excellent',
-      difficulty: [DIFFICULTY.MODERATE, DIFFICULTY.COMPLEX],
-      tokens: 8000,
-      description: 'للبحث والتحليل العميق'
-    }
-  },
-
-  // نماذج Mixtral (سياق طويل)
-  MIXTRAL: {
-    LONG_CONTEXT: {
-      name: 'mixtral-8x7b-32768',
-      provider: 'groq',
-      speed: 'medium',
-      quality: 'excellent',
-      difficulty: [DIFFICULTY.COMPLEX],
-      tokens: 32000,
-      description: 'للنصوص الطويلة والتحليل العميق'
+      description: 'سريع جداً'
     }
   }
 };
 
 // دالة لاختيار النموذج المناسب
 function selectModel(context) {
-  const { difficulty, type, requiresVision, requiresLongContext, requiresCode } = context;
+  const { difficulty, type, requiresVision, requiresCode } = context;
   
   // للصور
   if (requiresVision) {
     return MODELS.GROQ.VISION;
   }
   
-  // للأكواد
-  if (requiresCode || type === 'code') {
-    return MODELS.GROQ.CODE;
-  }
-  
-  // للسياق الطويل
-  if (requiresLongContext) {
-    return MODELS.MIXTRAL.LONG_CONTEXT;
-  }
-  
-  // للبحث
-  if (type === 'research') {
-    return MODELS.GROQ.RESEARCH;
-  }
-  
-  // حسب الصعوبة
-  switch (difficulty) {
-    case DIFFICULTY.SIMPLE:
-      return MODELS.GROQ.FAST;
-    
-    case DIFFICULTY.MODERATE:
-      return MODELS.GROQ.BALANCED;
-    
-    case DIFFICULTY.COMPLEX:
-    case DIFFICULTY.EXPERT:
-      return MODELS.GROQ.POWER;
-    
-    default:
-      return MODELS.GROQ.BALANCED;
-  }
+  // لكل شيء آخر نستخدم النموذج الرئيسي (أقوى وأسرع)
+  return MODELS.GROQ.MAIN;
 }
 
 // دالة لتحليل صعوبة السؤال
